@@ -88,16 +88,6 @@ for i, k in zip(unique_id[0:], range(0, len(unique_id))):  # number of id
         supervision_setup_wage = j.item(5)*(42-13.25)+ 13.25  
         unskilled_labor_wage = j.item(6)*(21-13.25) + 13.25
         
-        # # If we want to fix the values of some variables
-        # total_weeding_area = 100
-        # setup_time_per_plot = 0.16 
-        # setup_time = setup_time_per_plot/size
-        # repaire_energy_cost = j.item(0)*(56-14) + 14 
-        # weeding_efficiency =  0.5 
-        # supervision_ratio = 0.5 
-        # supervision_time = supervision_ratio*3.7
-        # supervision_setup_wage = 13.25  
-        # unskilled_labor_wage = 13.25
 
         # Step 1: calculate gross profit and profit for baseline using the new wage of unskilled labor
         # replace variable labor cost
