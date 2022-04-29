@@ -8,7 +8,7 @@ import os
 
 #%%
 # all_files = glob.glob(r'N:\agpo\work1\Shang\Robot\RobotPaperGit\Result\sugarbeet\LHS_*.pkl', recursive=True)
-all_files = glob.glob(r'N:\agpo\work1\Shang\Robot\RobotPaperGit\Result\sugarbeet\LHS_*.pkl', recursive=True)
+all_files = glob.glob(r'N:\agpo\work1\Shang\Robot\RobotPaperGit\Result\sugarbeet\MC_*.pkl', recursive=True)
 print(len(all_files))
 
 #%%
@@ -33,7 +33,7 @@ os.chdir(path)
 print("Current Working Directory " , os.getcwd())
 # df.to_excel(r'N:\agpo\work1\Shang\Robot\RobotPaperGit\Result\LHS400_sugarbeet_org_WTP.xlsx')
 # Pickle the dataframe
-dump(df, open('LHS_1000_sugarbeet_org_WTP.pkl', 'wb'))
+dump(df, open('3_MC_1000_sugarbeet_org_WTP.pkl', 'wb'))
 
 
 

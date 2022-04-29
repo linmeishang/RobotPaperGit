@@ -22,14 +22,14 @@ print("Current Working Directory " , os.getcwd())
 
 
 # Load the whole dataset
-df = load(open('1000_LHS_sugarbeet_org_WTP.pkl', 'rb'))
+df = load(open('0_MC_1000_sugarbeet_org_WTP.pkl', 'rb'))
 
 print(df.shape)
 
 
 
 #%%
-a = '1000LHS'
+a = '0_MC_1000'
 
 list_interaction = [['supervision_ratio', 'supervision_setup_wage'], ['unskilled_labor_wage', 'weeding_efficiency']]
 
@@ -46,7 +46,7 @@ list_of_farmCha = ['size', 'mechanisation']
 #%%
 All_variables = {}
 
-for i in list_of_variables[1:2]:
+for i in list_of_variables[0:]:
     
     variable_range = df[i].max() - df[i].min()
     step = variable_range/4
@@ -64,8 +64,8 @@ for i in list_of_variables[1:2]:
         # print(df_3.shape)
         WTP = df_2['price'].mean()
         print(WTP)
-        plt.hist(WTP)
-        plt.show()
+        # plt.hist(WTP)
+        # plt.show()
         
         WTP_dict[str(j)] = WTP
     
