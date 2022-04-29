@@ -44,6 +44,7 @@ print(len(unique_id)) # 1715
 
 
 #%%
+# Random Monte Carlo simulation
 k = np.random.rand(7, 1000)
 k_trans = k.transpose()
 print(k_trans.shape)
@@ -53,7 +54,7 @@ dump(k_trans, open('k_trans.pkl', 'wb'))
 #%%
 # loop over the 49 farm ids
 # Seperate the big df_ws in to many small dfs based on _id ()
-for i, k in zip(unique_id[20:21], range(0, len(unique_id))):  # number of id
+for i, k in zip(unique_id[0:], range(0, len(unique_id))):  # number of id
     
     print(k, i)
 
@@ -70,11 +71,11 @@ for i, k in zip(unique_id[20:21], range(0, len(unique_id))):  # number of id
     mechanisation = df_gm.iloc[0]['mechanisation']
     distance = df_gm.iloc[0]['distance']
 
-
+    # Store simulation data in a dataframe called "simulation"
     simulation = pd.DataFrame()
 
-    # Assign the LHS results to each variable:
-    # List of elements in K 
+    # Assign the random results to each variable:
+    # List of elements in k_trans 
     for j in k_trans[0:]:
         
         total_weeding_area = j.item(0)*(300-100) + 100
@@ -87,6 +88,7 @@ for i, k in zip(unique_id[20:21], range(0, len(unique_id))):  # number of id
         supervision_setup_wage = j.item(5)*(42-13.25)+ 13.25  
         unskilled_labor_wage = j.item(6)*(21-13.25) + 13.25
         
+        # # If we want to fix the values of some variables
         # total_weeding_area = 100
         # setup_time_per_plot = 0.16 
         # setup_time = setup_time_per_plot/size
