@@ -18,17 +18,17 @@ path = r'N:\agpo\work1\Shang\Robot\RobotPaperGit\Result'
 os.chdir(path)
 print("Current Working Directory " , os.getcwd())
 
-df = pd.read_excel('Time-LHS_WTP_sugarbeet_org_0.xlsx')
+# df = pd.read_excel('Time-LHS_WTP_sugarbeet_org_0.xlsx')
 
 # Load the whole dataset
-# df = load(open('0_MC_1000_sugarbeet_org_WTP.pkl', 'rb'))
+df = load(open('MC_1000_sugarbeet_org_WTP.pkl', 'rb'))
 
 print(df.shape)
 
 
 
 #%%
-a = '0_MC_200'
+a = 'MC_1000'
 
 list_interaction = [['supervision_ratio', 'supervision_setup_wage'], ['unskilled_labor_wage', 'weeding_efficiency']]
 

@@ -41,7 +41,7 @@ print(len(unique_id)) # 1715 for the full dataset (but we only use 49)
 
 #%%
 # Random Monte Carlo simulation generating N data points of 7 dimension (i.e. number of variables)
-n = np.random.rand(7, 200)
+n = np.random.rand(7, 1000)
 n_trans = n.transpose()
 print(n_trans.shape)
 dump(n_trans, open('n_trans.pkl', 'wb'))
@@ -173,7 +173,8 @@ def Breakeven(price):
 # loop over the 49 farm ids: for each farm id, we solve the the equation for many times
 # Seperate the big df_ws in to many small dfs based on _id ()
 for i, k in zip(unique_id[0:], range(0, len(unique_id))):  # number of id
-       
+    
+    print(i)
     # Load the working step (df_ws) and gross margin (df_gm) based on the id
     df_ws = df_ws_total[df_ws_total['_id'] == i]
     df_gm = df_gm_total[df_gm_total['_id'] == i] 
@@ -187,19 +188,31 @@ for i, k in zip(unique_id[0:], range(0, len(unique_id))):  # number of id
     simulation = pd.DataFrame()
 
     # Assign the random results to each variable:
-    for j in n_trans[0:]: 
+    # for j in n_trans[0:]: 
         # print("new calculation------------------------")
-        size = size
-        mechanisation = mechanisation
-        total_weeding_area = j.item(0)*(300-100) + 100
-        setup_time_per_plot = j.item(1)*(1-0.16) + 0.16 
+        # size = size
+        # mechanisation = mechanisation
+        # total_weeding_area = j.item(0)*(300-100) + 100
+        # setup_time_per_plot = j.item(1)*(1-0.16) + 0.16 
+        # setup_time = setup_time_per_plot/size
+        # repaire_energy_cost = j.item(2)*(56-14) + 14 
+        # weeding_efficiency =  j.item(3)*(1-0.5) + 0.5 
+        # supervision_ratio = j.item(4)*(1-0) + 0 
+        # supervision_time = supervision_ratio*3.7
+        # supervision_setup_wage = j.item(5)*(42-13.25)+ 13.25  
+        # unskilled_labor_wage = j.item(6)*(21-13.25) + 13.25
+        
+    for j in np.arange(0,2000): 
+
+        total_weeding_area = random.uniform(100, 300) # 380 
+        setup_time_per_plot = random.uniform(0.16, 1) #  0.42 
         setup_time = setup_time_per_plot/size
-        repaire_energy_cost = j.item(2)*(56-14) + 14 
-        weeding_efficiency =  j.item(3)*(1-0.5) + 0.5 
-        supervision_ratio = j.item(4)*(1-0) + 0 
+        repaire_energy_cost = random.uniform(14, 56) # 35 
+        weeding_efficiency =  random.uniform(0.5, 1) # 0.75 # 
+        supervision_ratio = random.uniform(0, 1)  # 0.5 #
         supervision_time = supervision_ratio*3.7
-        supervision_setup_wage = j.item(5)*(42-13.25)+ 13.25  
-        unskilled_labor_wage = j.item(6)*(21-13.25) + 13.25
+        supervision_setup_wage = random.uniform(13.25, 42) # 22.5 
+        unskilled_labor_wage = random.uniform(13.25, 21) 
 
         root = fsolve(Breakeven, 20000) # Breakeven = 0, 20000 is the initial value
         # print('root is--------------------:', root)
@@ -215,11 +228,14 @@ for i, k in zip(unique_id[0:], range(0, len(unique_id))):  # number of id
                 'size': size,  
                 'mechanisation': mechanisation,                         
                 'id': i}) 
+        
 
         # Concat the result of one solve into the big "simulation" dataframe 
         simulation = pd.concat([simulation,df_res])
         # print(simulation)
     
     # Save the simulation dataframe (containing N solves) 
-    filename = 'Time-LHS_WTP_sugarbeet_org_'+ str(k)
+    filename = '1000_MC_WTP_sugarbeet_org_'+ str(k)
     simulation.to_excel(r'N:\agpo\work1\Shang\Robot\RobotPaperGit\Result\sugarbeet\\'+filename+'.xlsx')
+
+# %%
