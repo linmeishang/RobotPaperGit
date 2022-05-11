@@ -1,17 +1,18 @@
 ﻿# %%
-import os
 import sqlite3
 import pandas as pd
 import copy
 import numpy as np
 import random
 from random import randint
-from sympy import symbols, Eq, solve
 from numpy import sqrt, array
-from scipy.optimize import fixed_point
 from scipy import optimize
 from scipy.optimize import fsolve
+import os
 import lhsmdu
+import pickle
+from pickle import dump
+import copy
 #%%
 path = r'N:\agpo\work1\Shang\Robot\RobotPaperGit\Data'
 os.chdir(path)
@@ -30,14 +31,153 @@ print(len(unique_id)) # 2401
 
 #%%
 # LHS for 6 dimensions
-k = lhsmdu.sample(6, 200) # Latin Hypercube Sampling with multi-dimensional uniformity 
-print(k.shape) # (6, 200) # This will generate a nested list with 6 variables, with 200 samples each.
-k_trans = k.transpose()
-print(k_trans)
+# k = lhsmdu.sample(6, 200) # Latin Hypercube Sampling with multi-dimensional uniformity 
+# print(k.shape) #  This will generate a nested list with 7 variables, with X samples each.
+# k_trans = k.transpose()
+# # print(k_trans)
+# dump(k_trans, open('k_trans.pkl', 'wb'))
 
 
 #%%
-for i, k in zip(unique_id, range(len(unique_id))):  # number of id
+# Random Monte Carlo simulation generating N data points of 7 dimension (i.e. number of variables)
+n = np.random.rand(6, 5)
+n_trans = n.transpose()
+print(n_trans.shape)
+dump(n_trans, open('n_trans_conv.pkl', 'wb'))
+
+
+#%%
+def Breakeven(price):
+    # Step 1: calculate gross profit and profit for baseline using the new wage of unskilled labor
+    # replace variable labor cost
+    df_gm_base = copy.deepcopy(df_gm)
+    
+    df_gm_base.loc[df_gm_base['figure'].str.contains('Variable Lohnkosten'), 'price'] = unskilled_labor_wage
+    variable_labor_time = df_gm_base.loc[df_gm_base['figure'].str.contains('Variable Lohnkosten'), 'amount']
+    df_gm_base.loc[df_gm_base['figure'].str.contains('Variable Lohnkosten'), 'total'] = variable_labor_time * unskilled_labor_wage
+
+    # pivot df_gm_base into df_baseline
+    df_baseline = pd.pivot_table(df_gm_base, values='total', index = 'grossMarginCategory', aggfunc=np.sum)
+
+    grossProfit_baseline = df_baseline.loc['revenues'] - df_baseline.loc['directCosts'] - df_baseline.loc['variableCosts']
+    netProfit_baseline = grossProfit_baseline - df_baseline.loc['fixCosts']
+    # print('netProfit_baseline:', netProfit_baseline)
+
+    # Step 2: replace related procedures with robot
+    df_ws_robot = copy.deepcopy(df_ws)
+    df_gm_robot = copy.deepcopy(df_gm)
+    
+    # loading robot parameters
+    time = setup_time + supervision_time
+    deprec = price/total_weeding_area 
+    interest = deprec * 0.3
+    others =  deprec * 0.002
+    maintenance = repaire_energy_cost
+
+
+    # copy the value of row 'Anbaupflanzenschutzspritze' or 'Anhängepflanzenschutzspritze'
+    # but this new row does not belong to the df
+    new_df_1=df_ws_robot[df_ws_robot['description'].str.contains('Anbaupflanzenschutzspritze')]
+    new_df_2=df_ws_robot[df_ws_robot['description'].str.contains('Anhängepflanzenschutzspritze')]
+    
+    # select the new df that is not empty
+    if new_df_1.shape[0] > 0:
+        new_df = new_df_1
+    else:
+        new_df = new_df_2
+    # print(i)
+    # print(new_df.shape)
+    robot_dict = {'description': 'Robotic weeding',
+            'time': time, 
+            'fuelCons': 0,
+            'deprec': deprec, 
+            'interest': interest, 
+            'others': others, 
+            'maintenance': maintenance,
+            'lubricants': 0,
+            'services': 0}
+    
+    # Adding a row of "robot" into working steps
+    df_ws_robot.loc['robot_1'] = pd.Series(robot_dict)
+    df_ws_robot.loc['robot_2'] = pd.Series(robot_dict)
+
+
+    a = ['time', 'fuelCons', 'deprec', 'interest', 'others', 'maintenance', 'lubricants', 'services']
+    c = [0, 0, 0, 0, 0, 0, 0, 0]
+
+    if new_df_1.shape[0] > 0:
+        df_ws_robot.loc[df_ws_robot['description'].str.contains('Anbaupflanzenschutzspritze', na = False), a] = c
+    else:
+        df_ws_robot.loc[df_ws_robot['description'].str.contains('Anhängepflanzenschutzspritze', na = False), a] = c
+
+
+    # Attention: if new_df.shape[0] == 3, it means we have replace the fungicide cost with 0 too, so now we put it back. 
+    # # new_df.shape[0] == 2, this means no fungicide is used. 
+    if new_df.shape[0] == 3:
+        df_ws_robot.loc['fungicide'] = new_df.iloc[2]
+        
+    # print(df_ws_robot)
+
+
+    ######################################################################################################################
+    # Step 3: calculate variable machine cost and fixed machine cost with robot
+    variable_machine_cost = df_ws_robot['maintenance'].sum() + df_ws_robot['lubricants'].sum()
+    fixed_machine_cost = df_ws_robot['deprec'].sum() + df_ws_robot['interest'].sum() + df_ws_robot['others'].sum()
+    # print("variable_machine_cost:", variable_machine_cost)
+    # print("fixed_machine_cost:", fixed_machine_cost) 
+
+
+    variable_labor_time = 0
+    robot_time = 2*time
+    fixed_labor_time = df_ws_robot['time'].sum() - variable_labor_time - robot_time
+
+    ######################################################################################################################
+    # Step 4: calculate gross profit and net profit with robot
+    # replace cost of Herbizid
+    # copy the old cost of herbizid
+    new_df = df_gm_robot[df_gm_robot['figure'].str.contains('Herbizid')]
+    herbi_cost = new_df['total'].values[0]
+
+    df_gm_robot.loc[df_gm_robot['figure'].str.contains('Herbizid'), 'total'] = herbi_cost * (1-herbicide_saving)
+
+
+    # replace variable machine cost and fixed machine cost
+    df_gm_robot.loc[df_gm_robot['figure'].str.contains('Variable Maschinenkosten'), 'total'] = variable_machine_cost
+    df_gm_robot.loc[df_gm_robot['figure'].str.contains('Fixe Maschinenkosten'), 'total'] = fixed_machine_cost
+
+
+    # replace variable labor cost
+    df_gm_robot.loc[df_gm_robot['figure'].str.contains('Variable Lohnkosten'), 'amount'] = variable_labor_time
+    df_gm_robot.loc[df_gm_robot['figure'].str.contains('Variable Lohnkosten'), 'total'] = variable_labor_time * unskilled_labor_wage  +  robot_time * supervision_setup_wage
+
+
+    # replace fixed labor time and cost  
+    df_gm_robot.loc[df_gm_robot['figure'].str.contains('Fixe Lohnkosten'), 'amount'] = fixed_labor_time
+    fixed_labor_wage = df_gm_robot.loc[df_gm_robot['figure'].str.contains('Fixe Lohnkosten'), 'price']
+    df_gm_robot.loc[df_gm_robot['figure'].str.contains('Fixe Lohnkosten'), 'total'] = fixed_labor_time * fixed_labor_wage
+
+
+    # Calculate gross profit and net profit
+    df_robot = pd.pivot_table(df_gm_robot, values='total', index = 'grossMarginCategory', aggfunc=np.sum)
+    
+    grossProfit_robot = df_robot.loc['revenues'] - df_robot.loc['directCosts'] - df_robot.loc['variableCosts']
+    netProfit_robot = grossProfit_robot - df_robot.loc['fixCosts']
+    
+    ######################################################################################################################
+    # Step 5: calculate the differences between robot and baseline
+
+    difference_grossProfit = grossProfit_robot - grossProfit_baseline
+    difference_netProfit = netProfit_robot - netProfit_baseline
+
+    # print('difference_grossProfit:', difference_grossProfit)
+    # print('difference_netProfit:', difference_netProfit)
+
+    return difference_netProfit
+
+      
+
+#%%
+for i, k in zip(unique_id[0:], range(len(unique_id))):  # number of id
 
     print(k, i)
 
@@ -45,21 +185,14 @@ for i, k in zip(unique_id, range(len(unique_id))):  # number of id
     df_gm = df_gm_total[df_gm_total['_id'] == i] 
 
     # loading the farm characteristics of this farm id
-    farmingType = df_gm.iloc[0]['farmingType']
-    crop = df_gm.iloc[0]['crop']
-    system = df_gm.iloc[0]['system']
-    section = df_gm.iloc[0]['section']
     size = df_gm.iloc[0]['size']
-
-    Yield = df_gm.iloc[0]['yield'] # cannot use "yield" because it has a special function in python
     mechanisation = df_gm.iloc[0]['mechanisation']
-
-    distance = df_gm.iloc[0]['distance']
+    # print(size, mechanisation)
 
     # create a empty data frame "simulation" to store the results
     simulation = pd.DataFrame()
 
-    for j in k_trans[0:1]:
+    for j in n_trans[0:]:
         
         total_weeding_area = j.item(0)*(300-100) + 100
         setup_time_per_plot = j.item(1)*(1-0.16) + 0.16 
@@ -71,176 +204,8 @@ for i, k in zip(unique_id, range(len(unique_id))):  # number of id
         supervision_setup_wage = j.item(5)*(42-13.25)+ 13.25  
         unskilled_labor_wage = 13.25
     
-
-        # Step 1: calculate gross profit and profit for baseline using the new wage of unskilled labor
-        # replace variable labor cost
-        df_gm.loc[df_gm['figure'].str.contains('Variable Lohnkosten'), 'price'] = unskilled_labor_wage
-        variable_labor_time = df_gm.loc[df_gm['figure'].str.contains('Variable Lohnkosten'), 'amount']
-        df_gm.loc[df_gm['figure'].str.contains('Variable Lohnkosten'), 'total'] = variable_labor_time * unskilled_labor_wage
-
-        # pivot df_gm into df_baseline
-        df_baseline = pd.pivot_table(df_gm, values='total', index = 'grossMarginCategory', aggfunc=np.sum)
-
-        grossProfit_baseline = df_baseline.loc['revenues'] - df_baseline.loc['directCosts'] - df_baseline.loc['variableCosts']
-        netProfit_baseline = grossProfit_baseline - df_baseline.loc['fixCosts']
-        # print('netProfit_baseline:', netProfit_baseline)
-        
-
-        def func(price):
-            
-            df_ws = df_ws_total[df_ws_total['_id'] == i]
-            df_gm = df_gm_total[df_gm_total['_id'] == i] 
-
-            # farmingType = df_gm.iloc[0]['farmingType']
-            # crop = df_gm.iloc[0]['crop']
-            # system = df_gm.iloc[0]['system']
-            # section = df_gm.iloc[0]['section']
-            # size = df_gm.iloc[0]['size']
-            # Yield = df_gm.iloc[0]['yield']
-            # mechanisation = df_gm.iloc[0]['mechanisation']
-            # distance = df_gm.iloc[0]['distance']
-
-        
-            ######################################################################################################################
-            # Step 1: calculate gross profit and profit for baseline using the new wage of unskilled labor
-            # replace variable labor cost
-            df_gm.loc[df_gm['figure'].str.contains('Variable Lohnkosten'), 'price'] = unskilled_labor_wage
-            variable_labor_time = df_gm.loc[df_gm['figure'].str.contains('Variable Lohnkosten'), 'amount']
-            df_gm.loc[df_gm['figure'].str.contains('Variable Lohnkosten'), 'total'] = variable_labor_time * unskilled_labor_wage
-
-            # pivot df_gm into df_baseline
-            df_baseline = pd.pivot_table(df_gm, values='total', index = 'grossMarginCategory', aggfunc=np.sum)
-
-            grossProfit_baseline = df_baseline.loc['revenues'] - df_baseline.loc['directCosts'] - df_baseline.loc['variableCosts']
-            netProfit_baseline = grossProfit_baseline - df_baseline.loc['fixCosts']
-            # print('netProfit_baseline:', netProfit_baseline)
-
-
-
-            
-            ######################################################################################################################
-        
-            # Step 2: replace related procedures with robot
-            # loading robot parameters
-            time = setup_time + supervision_time
-            deprec = price/total_weeding_area 
-            interest = deprec * 0.3
-            others =  deprec * 0.002
-            maintenance = repaire_energy_cost
-
-
-            # copy the value of row 'Anbaupflanzenschutzspritze' or 'Anhängepflanzenschutzspritze'
-            # but this new row does not belong to the df
-            new_df_1=df_ws[df_ws['description'].str.contains('Anbaupflanzenschutzspritze')]
-            new_df_2=df_ws[df_ws['description'].str.contains('Anhängepflanzenschutzspritze')]
-            
-            # select the new df that is not empty
-            if new_df_1.shape[0] > 0:
-                new_df = new_df_1
-            else:
-                new_df = new_df_2
-            # print(i)
-            # print(new_df.shape)
-
-
-            # Adding a row of "robot" into working steps
-            df_ws.loc['robot_1'] = {'description': 'Robot_1', 
-                                'time': time, 
-                                'deprec': deprec, 
-                                'interest': interest, 
-                                'others': others, 
-                                'maintenance': maintenance}
-
-            df_ws.loc['robot_2'] = {'description': 'Robot_1', 
-                                'time': time, 
-                                'deprec': deprec, 
-                                'interest': interest, 
-                                'others': others, 
-                                'maintenance': maintenance}
-
-
-            a = ['time', 'fuelCons', 'deprec', 'interest', 'others', 'maintenance', 'lubricants', 'services']
-            c = [0, 0, 0, 0, 0, 0, 0, 0]
-
-            if new_df_1.shape[0] > 0:
-                df_ws.loc[df_ws['description'].str.contains('Anbaupflanzenschutzspritze', na = False), a] = c
-            else:
-                df_ws.loc[df_ws['description'].str.contains('Anhängepflanzenschutzspritze', na = False), a] = c
-
     
-            # Attention: if new_df.shape[0] == 3, it means we have replace the fungicide cost with 0 too, so now we put it back. 
-            # # new_df.shape[0] == 2, this means no fungicide is used. 
-            if new_df.shape[0] == 3:
-                df_ws.loc['fungicide'] = new_df.iloc[2]
-
-
-                
-            # print(df_ws)
-
-            ######################################################################################################################
-            # Step 3: calculate variable machine cost and fixed machine cost with robot
-
-            variable_machine_cost = df_ws['maintenance'].sum() + df_ws['lubricants'].sum()
-            fixed_machine_cost = df_ws['deprec'].sum() + df_ws['interest'].sum() + df_ws['others'].sum()
-            # print("variable_machine_cost:", variable_machine_cost)
-            # print("fixed_machine_cost:", fixed_machine_cost) 
-
-
-            variable_labor_time = 0
-            robot_time = 2*time
-            fixed_labor_time = df_ws['time'].sum() - variable_labor_time - robot_time
-
-
-
-            ######################################################################################################################
-            # Step 4: calculate gross profit and net profit with robot
-            # replace cost of Herbizid
-            # copy the old cost of herbizid
-            new_df = df_gm[df_gm['figure'].str.contains('Herbizid')]
-            herbi_cost = new_df['total'].values[0]
-
-
-            df_gm.loc[df_gm['figure'].str.contains('Herbizid'), 'total'] = herbi_cost * (1-herbicide_saving)
-
-
-
-            # replace variable machine cost and fixed machine cost
-            df_gm.loc[df_gm['figure'].str.contains('Variable Maschinenkosten'), 'total'] = variable_machine_cost
-            df_gm.loc[df_gm['figure'].str.contains('Fixe Maschinenkosten'), 'total'] = fixed_machine_cost
-
-
-            # replace variable labor cost
-            df_gm.loc[df_gm['figure'].str.contains('Variable Lohnkosten'), 'amount'] = variable_labor_time
-            df_gm.loc[df_gm['figure'].str.contains('Variable Lohnkosten'), 'total'] = variable_labor_time * unskilled_labor_wage  +  robot_time * supervision_setup_wage
-
-
-            # replace fixed labor time and cost  
-            df_gm.loc[df_gm['figure'].str.contains('Fixe Lohnkosten'), 'amount'] = fixed_labor_time
-            fixed_labor_wage = df_gm.loc[df_gm['figure'].str.contains('Fixe Lohnkosten'), 'price']
-            df_gm.loc[df_gm['figure'].str.contains('Fixe Lohnkosten'), 'total'] = fixed_labor_time * fixed_labor_wage
-
-
-            # Calculate gross profit and net profit
-            df_robot = pd.pivot_table(df_gm, values='total', index = 'grossMarginCategory', aggfunc=np.sum)
-            
-            grossProfit_robot = df_robot.loc['revenues'] - df_robot.loc['directCosts'] - df_robot.loc['variableCosts']
-            netProfit_robot = grossProfit_robot - df_robot.loc['fixCosts']
-            
-
-
-
-            ######################################################################################################################
-            # Step 5: calculate the differences between robot and baseline
-
-            difference_grossProfit = grossProfit_robot - grossProfit_baseline
-            difference_netProfit = netProfit_robot - netProfit_baseline
-
-            # print('difference_grossProfit:', difference_grossProfit)
-            # print('difference_netProfit:', difference_netProfit)
-
-            return difference_netProfit
-
-        root = fsolve(func, 1000) # 1000 is the starting point
+        root = fsolve(Breakeven, 20000) # Breakeven = 0, 20000 is the initial value
         # print(root)
 
         df_res = pd.DataFrame({'price': root, 'total_weeding_area': total_weeding_area,
@@ -248,26 +213,17 @@ for i, k in zip(unique_id, range(len(unique_id))):  # number of id
                 'supervision_ratio': supervision_ratio,
                 'supervision_time': supervision_time, 
                 'supervision_setup_wage': supervision_setup_wage,
-                
                 'herbicide_saving': herbicide_saving,
-                'grossProfit_baseline': grossProfit_baseline, 'netProfit_baseline': netProfit_baseline, 
-                'farmingType': farmingType, 'crop': crop, 'system': system,
-                'section': section, 'size': size, 'yield': Yield, 
-                'mechanisation': mechanisation, 'distance': distance,                          
+                'size': size, 
+                'mechanisation': mechanisation,                     
                 'id': i}) 
-
-
-    	    # 'grossProfit_robot': grossProfit_robot, 'netProfit_robot': netProfit_robot, 'difference_grossProfit': difference_grossProfit, 'difference_netProfit': difference_netProfit, 
-
-        # print('df_res:', df_res.shape)
 
         simulation = pd.concat([simulation,df_res])
         # print(simulation)
 
     # Save the simulation results of each farm id into one excel
-    filename = 'LHS_WTP_sugarbeet_conv_'+ str(k)
+    filename = 'WTP_sugarbeet_conv_'+ str(k)
     simulation.to_excel(r'N:\agpo\work1\Shang\Robot\RobotPaperGit\Result\sugarbeet\\'+filename+'.xlsx')
     # Save robot parameters and differences into an excel
 
-    
 # %%

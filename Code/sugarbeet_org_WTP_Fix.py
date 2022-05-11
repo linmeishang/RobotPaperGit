@@ -44,7 +44,7 @@ print(len(unique_id)) # 1715 for the full dataset (but we only use 49)
 n = np.random.rand(7, 1000)
 n_trans = n.transpose()
 print(n_trans.shape)
-dump(n_trans, open('n_trans.pkl', 'wb'))
+dump(n_trans, open('n_trans_org.pkl', 'wb'))
 
 #%% Define the function that is used to derive the "price" that makes the function = 0, i.e. net profit differencen = 0
 def Breakeven(price):
