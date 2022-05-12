@@ -41,10 +41,8 @@ print(len(unique_id)) # 1715 for the full dataset (but we only use 49)
 
 #%%
 # Random Monte Carlo simulation generating N data points of 7 dimension (i.e. number of variables)
-n = np.random.rand(7, 1000)
-n_trans = n.transpose()
-print(n_trans.shape)
-dump(n_trans, open('n_trans_org.pkl', 'wb'))
+n = np.random.rand(10, 7)
+dump(n, open('n_org_1.pkl', 'wb'))
 
 #%% Define the function that is used to derive the "price" that makes the function = 0, i.e. net profit differencen = 0
 def Breakeven(price):
@@ -182,34 +180,21 @@ for i, k in zip(unique_id[0:], range(0, len(unique_id))):  # number of id
     simulation = pd.DataFrame()
 
     # Assign the random results to each variable:
-    # for j in n_trans[0:]: 
-        # print("new calculation------------------------")
-        # size = size
-        # mechanisation = mechanisation
-        # total_weeding_area = j.item(0)*(300-100) + 100
-        # setup_time_per_plot = j.item(1)*(1-0.16) + 0.16 
-        # setup_time = setup_time_per_plot/size
-        # repaire_energy_cost = j.item(2)*(56-14) + 14 
-        # weeding_efficiency =  j.item(3)*(1-0.5) + 0.5 
-        # supervision_ratio = j.item(4)*(1-0) + 0 
-        # supervision_time = supervision_ratio*3.7
-        # supervision_setup_wage = j.item(5)*(42-13.25)+ 13.25  
-        # unskilled_labor_wage = j.item(6)*(21-13.25) + 13.25
-        
-    for j in np.arange(0,5): 
-
-        total_weeding_area = random.uniform(100, 300) # 380 
-        setup_time_per_plot = random.uniform(0.16, 1) #  0.42 
+    for j in n[0:]: 
+      
+        size = size
+        mechanisation = mechanisation
+        total_weeding_area = j.item(0)*(300-100) + 100
+        setup_time_per_plot = j.item(1)*(1-0.16) + 0.16 
         setup_time = setup_time_per_plot/size
-        repaire_energy_cost = random.uniform(14, 56) # 35 
-        weeding_efficiency =  random.uniform(0.5, 1) # 0.75 # 
-        supervision_ratio = random.uniform(0, 1)  # 0.5 #
+        repaire_energy_cost = j.item(2)*(56-14) + 14 
+        weeding_efficiency =  j.item(3)*(1-0.5) + 0.5 
+        supervision_ratio = j.item(4)*(1-0) + 0 
         supervision_time = supervision_ratio*3.7
-        supervision_setup_wage = random.uniform(13.25, 42) # 22.5 
-        unskilled_labor_wage = random.uniform(13.25, 21) 
-
+        supervision_setup_wage = j.item(5)*(42-13.25)+ 13.25  
+        unskilled_labor_wage = j.item(6)*(21-13.25) + 13.25
+        
         root = fsolve(Breakeven, 20000) # Breakeven = 0, 20000 is the initial value
-        # print('root is--------------------:', root)
 
         # Store the results
         df_res = pd.DataFrame({'price': root, 'total_weeding_area': total_weeding_area,

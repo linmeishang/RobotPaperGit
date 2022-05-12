@@ -40,10 +40,8 @@ print(len(unique_id)) # 2401
 
 #%%
 # Random Monte Carlo simulation generating N data points of 7 dimension (i.e. number of variables)
-n = np.random.rand(6, 5)
-n_trans = n.transpose()
-print(n_trans.shape)
-dump(n_trans, open('n_trans_conv.pkl', 'wb'))
+n = np.random.rand(10, 6)
+dump(n, open('n_conv_1.pkl', 'wb'))
 
 
 #%%
@@ -180,7 +178,7 @@ for i, k in zip(unique_id[0:], range(len(unique_id))):  # number of id
     # create a empty data frame "simulation" to store the results
     simulation = pd.DataFrame()
 
-    for j in n_trans[0:5]:
+    for j in n[0:]:
         
         total_weeding_area = j.item(0)*(300-100) + 100
         setup_time_per_plot = j.item(1)*(1-0.16) + 0.16 
@@ -193,7 +191,6 @@ for i, k in zip(unique_id[0:], range(len(unique_id))):  # number of id
 
     
         root = fsolve(Breakeven, 20000) # Breakeven = 0, 20000 is the initial value
-        # print(root)
 
         df_res = pd.DataFrame({'price': root, 'total_weeding_area': total_weeding_area,
                 'setup_time_per_plot': setup_time_per_plot, 'repaire_energy_cost': repaire_energy_cost, 
