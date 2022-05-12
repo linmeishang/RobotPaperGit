@@ -205,9 +205,16 @@ for i, k in zip(unique_id[0:], range(len(unique_id))):  # number of id
         simulation = pd.concat([simulation,df_res])
         # print(simulation)
 
+    path = r'N:\agpo\work1\Shang\Robot\RobotPaperGit\Result\sugarbeet'
+    os.chdir(path)
+    print("Current Working Directory " , os.getcwd())
+    
     # Save the simulation results of each farm id into one excel
     filename = 'WTP_sugarbeet_conv_'+ str(k)
-    simulation.to_excel(r'N:\agpo\work1\Shang\Robot\RobotPaperGit\Result\sugarbeet\\'+filename+'.xlsx')
-    # Save robot parameters and differences into an excel
+    dump(simulation, open('{0}.pkl'.format(filename), 'wb'))
+       
+    # If you want to save in excel
+    # simulation.to_excel(r'N:\agpo\work1\Shang\Robot\RobotPaperGit\Result\sugarbeet\\'+filename+'.xlsx')
+
 
 # %%

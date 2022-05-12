@@ -214,7 +214,15 @@ for i, k in zip(unique_id[0:], range(0, len(unique_id))):  # number of id
         # print(simulation)
     
     # Save the simulation dataframe (containing N solves) 
-    filename = '1000_MC_WTP_sugarbeet_org_'+ str(k)
-    simulation.to_excel(r'N:\agpo\work1\Shang\Robot\RobotPaperGit\Result\sugarbeet\\'+filename+'.xlsx')
+    path = r'N:\agpo\work1\Shang\Robot\RobotPaperGit\Result\sugarbeet'
+    os.chdir(path)
+    print("Current Working Directory " , os.getcwd())
+    
+    filename = 'WTP_sugarbeet_org_'+ str(k)
+    dump(simulation, open('{0}.pkl'.format(filename), 'wb'))
+    
+    
+    # If you want to save in excel
+    # simulation.to_excel(r'N:\agpo\work1\Shang\Robot\RobotPaperGit\Result\sugarbeet\\'+filename+'.xlsx')
 
 # %%
