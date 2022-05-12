@@ -64,7 +64,6 @@ def Breakeven(price):
     # Gross profit and net profit
     grossProfit_baseline = df_baseline.loc['revenues'] - df_baseline.loc['directCosts'] - df_baseline.loc['variableCosts']
     netProfit_baseline = grossProfit_baseline - df_baseline.loc['fixCosts']
-    netProfit_baseline = netProfit_baseline.values[0]
     # print('grossProfit_baseline:', grossProfit_baseline)
     # print('netProfit_baseline:', netProfit_baseline)
 
@@ -86,18 +85,15 @@ def Breakeven(price):
     # print('original hand hacke costs:', new_df)
     
     # Adding a row of "robot" into working steps
-    robot_dict = {'description': 'Robotic weeding',
-                'time': time, 
-                'fuelCons': 0,
-                'deprec': deprec, 
-                'interest': interest, 
-                'others': others, 
-                'maintenance': maintenance,
-                'lubricants': 0,
-                'services': 0}
+    robot_dict = {'description': '2 times Robotic weeding',
+                'time': time*2,
+                'deprec': deprec*2, 
+                'interest': interest*2, 
+                'others': others*2, 
+                'maintenance': maintenance*2}
     
-    df_ws_robot.loc['robot_1'] = pd.Series(robot_dict)
-    df_ws_robot.loc['robot_2'] = pd.Series(robot_dict)
+    df_ws_robot.loc['robot'] = pd.Series(robot_dict)
+
     
     
     a = ['time', 'fuelCons', 'deprec', 'interest', 'others', 'maintenance', 'lubricants', 'services']
@@ -154,14 +150,12 @@ def Breakeven(price):
 
     grossProfit_robot = df_robot.loc['revenues'] - df_robot.loc['directCosts'] - df_robot.loc['variableCosts']
     netProfit_robot = grossProfit_robot - df_robot.loc['fixCosts']
-    netProfit_robot = netProfit_robot.values[0]
-    
+
     # print("grossProfit_robot:", grossProfit_robot)
     # print("netProfit_robot:", netProfit_robot)
 
     ######################################################################################################################
     # Step 5: calculate the differences between robot and baseline      
-    difference_grossProfit = grossProfit_robot - grossProfit_baseline
     difference_netProfit = netProfit_robot - netProfit_baseline
     # print('difference_grossProfit:', difference_grossProfit)
     # print('difference_netProfit:', difference_netProfit)
@@ -174,7 +168,7 @@ def Breakeven(price):
 # Seperate the big df_ws in to many small dfs based on _id ()
 for i, k in zip(unique_id[0:], range(0, len(unique_id))):  # number of id
     
-    print(i)
+    print(k, i)
     # Load the working step (df_ws) and gross margin (df_gm) based on the id
     df_ws = df_ws_total[df_ws_total['_id'] == i]
     df_gm = df_gm_total[df_gm_total['_id'] == i] 
@@ -202,7 +196,7 @@ for i, k in zip(unique_id[0:], range(0, len(unique_id))):  # number of id
         # supervision_setup_wage = j.item(5)*(42-13.25)+ 13.25  
         # unskilled_labor_wage = j.item(6)*(21-13.25) + 13.25
         
-    for j in np.arange(0,2000): 
+    for j in np.arange(0,5): 
 
         total_weeding_area = random.uniform(100, 300) # 380 
         setup_time_per_plot = random.uniform(0.16, 1) #  0.42 

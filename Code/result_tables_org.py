@@ -21,14 +21,17 @@ print("Current Working Directory " , os.getcwd())
 # df = pd.read_excel('Time-LHS_WTP_sugarbeet_org_0.xlsx')
 
 # Load the whole dataset
-df = load(open('MC_1000_sugarbeet_org_WTP.pkl', 'rb'))
-
+df1 = load(open('MC_2000_sugarbeet_org_WTP.pkl', 'rb'))
+print(df1.shape)
+df2 = load(open('MC_1000_sugarbeet_org_WTP.pkl', 'rb'))
+print(df2.shape)
+df = df1.append(df2)
 print(df.shape)
 
 
 
 #%%
-a = 'MC_1000'
+a = 'MC_2000'
 
 list_interaction = [['supervision_ratio', 'supervision_setup_wage'], ['unskilled_labor_wage', 'weeding_efficiency']]
 
@@ -59,9 +62,9 @@ for i in list_of_variables[0:]:
 
         df_2 = df.loc[df[i].between(low, high, inclusive=True)] 
         print(df_2.shape)
-        # df_3 = df_2[(np.abs(stats.zscore(df_2['price'])) < 2)]
-        # print(df_3.shape)
-        WTP = df_2['price'].mean()
+        df_3 = df_2[(np.abs(stats.zscore(df_2['price'])) < 3)]
+        print(df_3.shape)
+        WTP = df_3['price'].mean()
         print(WTP)
         # plt.hist(WTP)
         # plt.show()
@@ -74,7 +77,7 @@ print(All_variables)
 
 WTP_df =pd.DataFrame.from_dict(All_variables,orient='index')
 print(WTP_df)
-WTP_df.to_excel(a+'_WTP_mean.xlsx')
+WTP_df.to_excel(a+'_WTP_mean_noOutlier.xlsx')
 
 
 
@@ -127,7 +130,7 @@ with pd.ExcelWriter(filename, engine='openpyxl') as writer:
         writer.save()
 
 #%%
-# WTP Q1-Q4
+# Thomas: WTP Q1-Q4
 # Find the min and max of WTP 
 WTP_range = df['price'].max() - df['price'].min()
 step = WTP_range/4
@@ -156,7 +159,7 @@ for j in range(1,5):
 Q_WTP_df =pd.DataFrame.from_dict(Q_dict,orient='index')
 print(Q_WTP_df)
 Q_df_trans = Q_WTP_df.T
-Q_df_trans.to_excel(a+'_WTP_Q_mean.xlsx')
+Q_df_trans.to_excel(a+'_WTP_Q_mean_Thomas.xlsx')
 
 
 
@@ -186,7 +189,7 @@ for i in list_of_farmCha:
 
     WTP_df =pd.DataFrame.from_dict(WTP_dict,orient='index')
     print(WTP_df)
-    WTP_df.to_excel(a+'_MC_32768_WTP_table_'+i+'.xlsx')
+    WTP_df.to_excel(a+'_MC_2000_WTP_farmChar_'+i+'.xlsx')
     
     
 #%%

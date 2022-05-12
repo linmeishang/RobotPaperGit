@@ -1,0 +1,123 @@
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+    50                                           @profile
+    51                                           def Breakeven(price):
+    52
+    53                                               ######################################################################################################################
+    54                                               # Step 1: calculate gross profit and profit for baseline using the new wage of unskilled labor
+    55                                               # replace variable labor cost
+    56       185      32995.5    178.4      0.2      df_gm_base = copy.deepcopy(df_gm)
+    57
+    58       185     214673.8   1160.4      1.5      df_gm_base.loc[df_gm_base['figure'].str.contains('Variable Lohnkosten'), 'price'] = unskilled_labor_wage
+    59       185     182005.9    983.8      1.3      variable_labor_time_baseline = df_gm_base.loc[df_gm_base['figure'].str.contains('Variable Lohnkosten'), 'amount']
+    60       185     301572.4   1630.1      2.2      df_gm_base.loc[df_gm_base['figure'].str.contains('Variable Lohnkosten'), 'total'] = variable_labor_time_baseline * unskilled_labor_wage
+    61
+    62                                               # pivot df_gm into df_baseline
+    63       185    1674079.2   9049.1     12.0      df_baseline = pd.pivot_table(df_gm_base, values='total', index = 'grossMarginCategory', aggfunc=np.sum)
+    64
+    65                                               # Gross profit and net profit
+    66       185     284812.3   1539.5      2.0      grossProfit_baseline = df_baseline.loc['revenues'] - df_baseline.loc['directCosts'] - df_baseline.loc['variableCosts']
+    67       185     109544.5    592.1      0.8      netProfit_baseline = grossProfit_baseline - df_baseline.loc['fixCosts']
+    68       185       2635.0     14.2      0.0      netProfit_baseline = netProfit_baseline.values[0]
+    69                                               # print('grossProfit_baseline:', grossProfit_baseline)
+    70                                               # print('netProfit_baseline:', netProfit_baseline)
+    71
+    72
+    73                                               ######################################################################################################################
+    74                                               # Step 2: Replace related procedures with robot
+    75       185      31325.3    169.3      0.2      df_ws_robot = copy.deepcopy(df_ws)
+    76       185      26941.8    145.6      0.2      df_gm_robot = copy.deepcopy(df_gm)
+    77
+    78                                               # loading robot parameters
+    79       185        703.1      3.8      0.0      time = setup_time + supervision_time
+    80       185       1690.7      9.1      0.0      deprec = price/total_weeding_area
+    81       185       1072.1      5.8      0.0      interest = deprec * 0.3
+    82       185        749.3      4.1      0.0      others =  deprec * 0.002
+    83       185        350.8      1.9      0.0      maintenance = repaire_energy_cost
+    84
+    85                                               # copy the value of row 'Anbaupflanzenschutzspritze' or 'Anhängepflanzenschutzspritze'(but this new row does not belong to the df)
+    86       185     236345.2   1277.5      1.7      new_df = df_ws_robot[df_ws_robot['name'].str.contains('Handhacke', na = False)]
+    87                                               # print('original hand hacke costs:', new_df)
+    88
+    89                                               # Adding a row of "robot" into working steps
+    90       370       1077.7      2.9      0.0      robot_dict = {'description': 'Robotic weeding',
+    91       185        334.5      1.8      0.0                  'time': time,
+    92       185        326.6      1.8      0.0                  'fuelCons': 0,
+    93       185        321.4      1.7      0.0                  'deprec': deprec,
+    94       185        318.2      1.7      0.0                  'interest': interest,
+    95       185        323.3      1.7      0.0                  'others': others,
+    96       185        314.9      1.7      0.0                  'maintenance': maintenance,
+    97       185        323.3      1.7      0.0                  'lubricants': 0,
+    98       185        320.0      1.7      0.0                  'services': 0}
+    99
+   100       185    2162133.0  11687.2     15.5      df_ws_robot.loc['robot_1'] = pd.Series(robot_dict)
+   101       185    2026660.0  10954.9     14.6      df_ws_robot.loc['robot_2'] = pd.Series(robot_dict)
+   102
+   103
+   104       185        680.2      3.7      0.0      a = ['time', 'fuelCons', 'deprec', 'interest', 'others', 'maintenance', 'lubricants', 'services']
+   105
+   106                                               # if not enough weeding efficiency
+   107       370     190439.8    514.7      1.4      c = [new_df.iloc[0]['time']*(1-weeding_efficiency), new_df.iloc[0]['fuelCons']*(1-weeding_efficiency),
+   108       185     181213.2    979.5      1.3          new_df.iloc[0]['deprec']*(1-weeding_efficiency), new_df.iloc[0]['interest']*(1-weeding_efficiency),
+   109       185     179964.3    972.8      1.3          new_df.iloc[0]['others']*(1-weeding_efficiency), new_df.iloc[0]['maintenance']*(1-weeding_efficiency),
+   110       185     179436.7    969.9      1.3          new_df.iloc[0]['lubricants']*(1-weeding_efficiency), new_df.iloc[0]['services']*(1-weeding_efficiency)]
+   111
+   112       370     179551.0    485.3      1.3      d = [new_df.iloc[1]['time']*(1-weeding_efficiency), new_df.iloc[1]['fuelCons']*(1-weeding_efficiency),
+   113       185     178408.9    964.4      1.3          new_df.iloc[1]['deprec']*(1-weeding_efficiency), new_df.iloc[1]['interest']*(1-weeding_efficiency),
+   114       185     178567.5    965.2      1.3          new_df.iloc[1]['others']*(1-weeding_efficiency), new_df.iloc[1]['maintenance']*(1-weeding_efficiency),
+   115       185     178800.3    966.5      1.3          new_df.iloc[1]['lubricants']*(1-weeding_efficiency), new_df.iloc[1]['services']*(1-weeding_efficiency)]
+   116
+   117
+   118                                               # Note it should be 'Handhacke (1. Hacke)', but python do not accept space, this way also works
+   119       185     788970.7   4264.7      5.7      df_ws_robot.loc[df_ws_robot['name'].str.contains('Handhacke', na=False), a] = c
+   120       185     743663.9   4019.8      5.3      df_ws_robot.loc[df_ws_robot['name'].str.contains('Reihenschlu', na=False), a] = d
+   121                                               # print(df_ws_robot['time']) # to check if the df_ws_robot is correct
+   122
+   123                                               # Step 3: calculate variable machine cost and fixed machine cost with robot
+   124       185     136564.7    738.2      1.0      variable_machine_cost = df_ws_robot['maintenance'].sum() + df_ws_robot['lubricants'].sum()
+   125       185     210458.7   1137.6      1.5      fixed_machine_cost = df_ws_robot['deprec'].sum() + df_ws_robot['interest'].sum() + df_ws_robot['others'].sum()
+   126                                               # print('variable_machine_cost:', variable_machine_cost)
+   127                                               # print('fixed_machine_cost:', fixed_machine_cost)
+   128
+   129       185     303079.3   1638.3      2.2      handhacke_df = df_ws_robot[df_ws_robot['name'].str.contains('Handhacke', na = False)]
+   130                                               # print('new_handhacke_df:', handhacke_df)
+   131       185      68457.5    370.0      0.5      variable_labor_time = handhacke_df['time'].sum()/9*8
+   132       185        611.2      3.3      0.0      robot_time = 2*time
+   133       185      67300.5    363.8      0.5      fixed_labor_time = df_ws_robot['time'].sum() - variable_labor_time - robot_time
+   134                                               # print('variable_labor_time:', variable_labor_time)
+   135                                               # print('robot_time:', robot_time)
+   136                                               # print('fixed_labor_time:', fixed_labor_time)
+   137
+   138                                               # Step 4: calculate gross profit and net profit with robot
+   139                                               # replace variable machine cost and fixed machine cost
+   140       185     209884.4   1134.5      1.5      df_gm_robot.loc[df_gm_robot['figure'].str.contains('Variable Maschinenkosten'), 'total'] = variable_machine_cost
+   141       185     173379.2    937.2      1.2      df_gm_robot.loc[df_gm_robot['figure'].str.contains('Fixe Maschinenkosten'), 'total'] = fixed_machine_cost
+   142
+   143                                               # replace variable labor cost
+   144       185     169458.9    916.0      1.2      df_gm_robot.loc[df_gm_robot['figure'].str.contains('Variable Lohnkosten'), 'total'] = variable_labor_time * unskilled_labor_wage  +  robot_time * supervision_setup_wage
+   145                                               # print('Variable Lohnkosten:', df_gm_robot.loc[df_gm_robot['figure'].str.contains('Variable Lohnkosten'), 'total'])
+   146
+   147                                               # replace fixed labor cost
+   148       185     169885.8    918.3      1.2      df_gm_robot.loc[df_gm_robot['figure'].str.contains('Fixe Lohnkosten'), 'total'] = fixed_labor_time * 21
+   149
+   150
+   151                                               # ##### No problem here after #########################
+   152                                               # Calculate gross profit and net profit
+   153       185    1673451.3   9045.7     12.0      df_robot = pd.pivot_table(df_gm_robot, values='total', index = 'grossMarginCategory', aggfunc=np.sum)
+   154                                               # print(df_robot)
+   155
+   156       185     284721.3   1539.0      2.0      grossProfit_robot = df_robot.loc['revenues'] - df_robot.loc['directCosts'] - df_robot.loc['variableCosts']
+   157       185     109691.5    592.9      0.8      netProfit_robot = grossProfit_robot - df_robot.loc['fixCosts']
+   158       185       2596.3     14.0      0.0      netProfit_robot = netProfit_robot.values[0]
+   159
+   160                                               # print("grossProfit_robot:", grossProfit_robot)
+   161                                               # print("netProfit_robot:", netProfit_robot)
+   162
+   163                                               ######################################################################################################################
+   164                                               # Step 5: calculate the differences between robot and baseline
+   165       185      64299.8    347.6      0.5      difference_grossProfit = grossProfit_robot - grossProfit_baseline
+   166       185        585.5      3.2      0.0      difference_netProfit = netProfit_robot - netProfit_baseline
+   167                                               # print('difference_grossProfit:', difference_grossProfit)
+   168                                               # print('difference_netProfit:', difference_netProfit)
+   169
+   170       185        330.8      1.8      0.0      return difference_netProfit

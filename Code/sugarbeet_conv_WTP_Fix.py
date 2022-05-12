@@ -48,20 +48,17 @@ dump(n_trans, open('n_trans_conv.pkl', 'wb'))
 
 #%%
 def Breakeven(price):
-    # Step 1: calculate gross profit and profit for baseline using the new wage of unskilled labor
-    # replace variable labor cost
+    
+    # Step 1: calculate gross profit and profit for baseline
     df_gm_base = copy.deepcopy(df_gm)
     
-    df_gm_base.loc[df_gm_base['figure'].str.contains('Variable Lohnkosten'), 'price'] = unskilled_labor_wage
-    variable_labor_time = df_gm_base.loc[df_gm_base['figure'].str.contains('Variable Lohnkosten'), 'amount']
-    df_gm_base.loc[df_gm_base['figure'].str.contains('Variable Lohnkosten'), 'total'] = variable_labor_time * unskilled_labor_wage
-
     # pivot df_gm_base into df_baseline
     df_baseline = pd.pivot_table(df_gm_base, values='total', index = 'grossMarginCategory', aggfunc=np.sum)
 
     grossProfit_baseline = df_baseline.loc['revenues'] - df_baseline.loc['directCosts'] - df_baseline.loc['variableCosts']
     netProfit_baseline = grossProfit_baseline - df_baseline.loc['fixCosts']
     # print('netProfit_baseline:', netProfit_baseline)
+
 
     # Step 2: replace related procedures with robot
     df_ws_robot = copy.deepcopy(df_ws)
@@ -87,19 +84,15 @@ def Breakeven(price):
         new_df = new_df_2
     # print(i)
     # print(new_df.shape)
-    robot_dict = {'description': 'Robotic weeding',
-            'time': time, 
-            'fuelCons': 0,
-            'deprec': deprec, 
-            'interest': interest, 
-            'others': others, 
-            'maintenance': maintenance,
-            'lubricants': 0,
-            'services': 0}
+    robot_dict = {'description': '2 times Robotic weeding',
+            'time': time*2,
+            'deprec': deprec*2, 
+            'interest': interest*2, 
+            'others': others*2, 
+            'maintenance': maintenance*2}
     
     # Adding a row of "robot" into working steps
-    df_ws_robot.loc['robot_1'] = pd.Series(robot_dict)
-    df_ws_robot.loc['robot_2'] = pd.Series(robot_dict)
+    df_ws_robot.loc['robot'] = pd.Series(robot_dict)
 
 
     a = ['time', 'fuelCons', 'deprec', 'interest', 'others', 'maintenance', 'lubricants', 'services']
@@ -126,10 +119,8 @@ def Breakeven(price):
     # print("variable_machine_cost:", variable_machine_cost)
     # print("fixed_machine_cost:", fixed_machine_cost) 
 
-
-    variable_labor_time = 0
     robot_time = 2*time
-    fixed_labor_time = df_ws_robot['time'].sum() - variable_labor_time - robot_time
+    fixed_labor_time = df_ws_robot['time'].sum() - robot_time
 
     ######################################################################################################################
     # Step 4: calculate gross profit and net profit with robot
@@ -147,8 +138,7 @@ def Breakeven(price):
 
 
     # replace variable labor cost
-    df_gm_robot.loc[df_gm_robot['figure'].str.contains('Variable Lohnkosten'), 'amount'] = variable_labor_time
-    df_gm_robot.loc[df_gm_robot['figure'].str.contains('Variable Lohnkosten'), 'total'] = variable_labor_time * unskilled_labor_wage  +  robot_time * supervision_setup_wage
+    df_gm_robot.loc[df_gm_robot['figure'].str.contains('Variable Lohnkosten'), 'total'] = robot_time * supervision_setup_wage
 
 
     # replace fixed labor time and cost  
@@ -165,8 +155,6 @@ def Breakeven(price):
     
     ######################################################################################################################
     # Step 5: calculate the differences between robot and baseline
-
-    difference_grossProfit = grossProfit_robot - grossProfit_baseline
     difference_netProfit = netProfit_robot - netProfit_baseline
 
     # print('difference_grossProfit:', difference_grossProfit)
@@ -192,7 +180,7 @@ for i, k in zip(unique_id[0:], range(len(unique_id))):  # number of id
     # create a empty data frame "simulation" to store the results
     simulation = pd.DataFrame()
 
-    for j in n_trans[0:]:
+    for j in n_trans[0:5]:
         
         total_weeding_area = j.item(0)*(300-100) + 100
         setup_time_per_plot = j.item(1)*(1-0.16) + 0.16 
@@ -202,8 +190,7 @@ for i, k in zip(unique_id[0:], range(len(unique_id))):  # number of id
         supervision_ratio = j.item(4)*(1-0) + 0 
         supervision_time = supervision_ratio*3.7
         supervision_setup_wage = j.item(5)*(42-13.25)+ 13.25  
-        unskilled_labor_wage = 13.25
-    
+
     
         root = fsolve(Breakeven, 20000) # Breakeven = 0, 20000 is the initial value
         # print(root)
