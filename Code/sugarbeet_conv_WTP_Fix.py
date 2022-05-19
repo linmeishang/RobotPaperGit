@@ -11,7 +11,7 @@ from scipy.optimize import fsolve
 import os
 import lhsmdu
 import pickle
-from pickle import dump
+from pickle import dump, load
 import copy
 #%%
 path = r'N:\agpo\work1\Shang\Robot\RobotPaperGit\Data'
@@ -40,9 +40,9 @@ print(len(unique_id)) # 2401
 
 #%%
 # Random Monte Carlo simulation generating N data points of 7 dimension (i.e. number of variables)
-n = np.random.rand(10, 6)
+np.random.seed(1)
+n = np.random.rand(5000, 6)
 dump(n, open('n_conv_1.pkl', 'wb'))
-
 
 #%%
 def Breakeven(price):
@@ -163,7 +163,7 @@ def Breakeven(price):
       
 
 #%%
-for i, k in zip(unique_id[0:], range(len(unique_id))):  # number of id
+for i, k in zip(unique_id[-1:0], range(len(unique_id))):  # number of id
 
     print(k, i)
 
