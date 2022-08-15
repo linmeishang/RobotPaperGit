@@ -37,13 +37,19 @@ print(len(unique_id)) # 1715 for the full dataset (but we only use 49)
 # # print(k_trans)
 # dump(k_trans, open('k_trans.pkl', 'wb'))
 
-
 #%%
 # Random Monte Carlo simulation generating N data points of 7 dimension (i.e. number of variables)
+<<<<<<< HEAD
 N = np.random.rand(7, 10)
 N_trans = N.transpose()
 print(N_trans.shape)
 dump(N_trans, open('N_trans.pkl', 'wb'))
+=======
+np.random.seed(14)
+n = np.random.rand(2000, 7)
+dump(n, open('n_org_14.pkl', 'wb'))
+print(n)
+>>>>>>> 21c99419abe83c9c88b05460a14450cacfc13ca3
 
 
 #%% Define the function that is used to derive the "price" that makes the function = 0, i.e. net profit differencen = 0

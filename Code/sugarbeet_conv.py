@@ -41,8 +41,13 @@ print(len(unique_id)) # 2401
 #%%
 # Random Monte Carlo simulation generating N data points of 7 dimension (i.e. number of variables)
 np.random.seed(1)
+<<<<<<< HEAD:Code/sugarbeet_conv.py
 n = np.random.rand(4000, 6)
 dump(n, open('n_conv_1_new.pkl', 'wb'))
+=======
+n = np.random.rand(5000, 6)
+dump(n, open('n_conv_1.pkl', 'wb'))
+>>>>>>> 21c99419abe83c9c88b05460a14450cacfc13ca3:Code/sugarbeet_conv_WTP_Fix.py
 
 #%%
 def Breakeven(price):

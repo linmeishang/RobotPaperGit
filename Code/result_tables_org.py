@@ -21,6 +21,7 @@ print("Current Working Directory " , os.getcwd())
 #%%
 # df = pd.read_excel('Time-LHS_WTP_sugarbeet_org_0.xlsx')
 
+<<<<<<< HEAD
 all_files = glob.glob(r'N:\agpo\work1\Shang\Robot\RobotPaperGit\Result\*org*.pkl', recursive=True)
 print(all_files)
 
@@ -38,6 +39,22 @@ df.head()
 print(df.shape)
 
 dump(df, open(a+'_sugarbeet_org_WTP_1-8.pkl', 'wb'))
+=======
+all_files = glob.glob(r'N:\agpo\work1\Shang\Robot\RobotPaperGit\Result\*.pkl', recursive=True)
+print(all_files)
+
+#%%
+df = pd.DataFrame()
+for file in all_files:
+    if file.endswith('.pkl'):
+        
+        # df = df.append(pd.read_excel(file)) 
+        df = df.append(load(open(file, 'rb')))
+        print(df.shape)
+        
+df.head() 
+print(df.shape)
+>>>>>>> 21c99419abe83c9c88b05460a14450cacfc13ca3
 
 #%%
 df.columns
@@ -46,6 +63,10 @@ df.columns
 # print(df12)
 
 #%%
+<<<<<<< HEAD
+=======
+a = '1-13_MC'
+>>>>>>> 21c99419abe83c9c88b05460a14450cacfc13ca3
 
 list_interaction = [['supervision_ratio', 'supervision_setup_wage'], ['unskilled_labor_wage', 'weeding_efficiency']]
 
@@ -91,7 +112,11 @@ print(All_variables)
 
 WTP_df =pd.DataFrame.from_dict(All_variables,orient='index')
 print(WTP_df)
+<<<<<<< HEAD
 WTP_df.to_excel(a+'_WTP_mean_1-8.xlsx')
+=======
+WTP_df.to_excel(a+'_WTP_mean.xlsx')
+>>>>>>> 21c99419abe83c9c88b05460a14450cacfc13ca3
 
 
 #%%
@@ -151,7 +176,11 @@ for i in list_of_farmCha:
 
     WTP_df =pd.DataFrame.from_dict(WTP_dict,orient='index')
     print(WTP_df)
+<<<<<<< HEAD
     WTP_df.to_excel(a+'_WTP_1-8_'+i+'.xlsx')
+=======
+    WTP_df.to_excel(a+'_MC_2-12_WTP_'+i+'.xlsx')
+>>>>>>> 21c99419abe83c9c88b05460a14450cacfc13ca3
     
     
 
@@ -209,9 +238,15 @@ df.to_excel(a+'_Matrix_'+param_1+'_'+param_2+'.xlsx')
 
 
 # #%%
+<<<<<<< HEAD
 
 # # #%%
 
+=======
+
+# # #%%
+
+>>>>>>> 21c99419abe83c9c88b05460a14450cacfc13ca3
 # #%%    
 # param_1 = 'size' # param_1 must be either "size" or "mechanisation"
 # param_2 = 'setup_time_per_plot' # param_2 must be a variable in the list of variables
