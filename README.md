@@ -25,3 +25,10 @@ This folder contains the following codes:
 
 
 # 4. Results
+This folder contains the data generated from the Monte Carlo simulation, including:
+
+  a. three pkl files for conventional farming and 8 files for organic farming
+  
+  b. 6 excels files summarizing the results from the generated data
+  
+  c. three plots depicting the generated data
