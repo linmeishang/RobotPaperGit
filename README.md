@@ -46,7 +46,9 @@ This folder contains the following codes:
 # 4. Results
 This folder contains the data generated from the Monte Carlo simulation, including:
 
-  1) 3 pkl files for conventional farming and 8 files for organic farming
+  1) randoms_seeds folder: the random seeds used to generate the data for both conventional and organic farming
+
+  1) data used for analysis: 3 pickle files for conventional farming and 8 files for organic farming
   
   2) 6 excels files summarizing the results from the generated data
   
